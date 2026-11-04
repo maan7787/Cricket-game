@@ -2498,31 +2498,53 @@ class KnockoutWindow(Screen):
 
 class SoundManager:
     def __init__(self):
-        self.music = SoundLoader.load("bg_music.mp3") if os.path.exists("bg_music.mp3") else None
-        self.click = SoundLoader.load("click.wav") if os.path.exists("click.wav") else None
+        self.music = None
+        self.click = None
         self.is_muted = False
         
-        if self.music:
-            self.music.loop = True
-            self.music.volume = 0.3
-            
-        if self.click:
-            self.click.volume = 1.0
+        # Android path safety: Try direct relative and asset fallback
+        for path in ["bg_music.mp3", "bg_music.ogg"]:
+            try:
+                snd = SoundLoader.load(path)
+                if snd:
+                    self.music = snd
+                    self.music.loop = True
+                    self.music.volume = 0.4
+                    break
+            except Exception as e:
+                print(f"Error loading {path}: {e}")
+
+        try:
+            self.click = SoundLoader.load("click.wav")
+            if self.click:
+                self.click.volume = 1.0
+        except Exception:
+            pass
 
     def start_music(self):
-        if self.music and not self.is_muted: self.music.play()
+        if self.music and not self.is_muted:
+            try:
+                self.music.play()
+            except Exception as e:
+                print(f"Audio Playback Error: {e}")
 
     def toggle(self):
         self.is_muted = not self.is_muted
         if self.music:
-            if self.is_muted: self.music.stop()
-            else: self.music.play()
+            if self.is_muted:
+                self.music.stop()
+            else:
+                self.music.play()
         return self.is_muted
 
     def play_click(self):
         if self.click and not self.is_muted:
-            if self.click.state == 'play': self.click.stop()
-            self.click.play()
+            try:
+                if self.click.state == 'play':
+                    self.click.stop()
+                self.click.play()
+            except Exception:
+                pass
 
 
 class CricketApp(App):
@@ -2557,10 +2579,18 @@ class CricketApp(App):
         if hasattr(self, 'sound_mgr'):
             self.sound_mgr.play_click()
 
+    def on_start(self):
+        # Android safe delayed start
+        Clock.schedule_once(lambda dt: self.sound_mgr.start_music(), 0.5)
+
+    def on_stop(self):
+        # Stop playback when game closes/minimizes
+        if hasattr(self, 'sound_mgr') and self.sound_mgr.music:
+            self.sound_mgr.music.stop()
+
     def build(self):
         self.data_mgr.load()
         self.sound_mgr = SoundManager()
-        self.sound_mgr.start_music()
         Builder.load_string(kv_string)
         sm = ScreenManager()
         sm.add_widget(MenuScreen(name='menu'))
