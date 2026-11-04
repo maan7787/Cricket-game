@@ -12,6 +12,12 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Set up Java 17
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
@@ -34,7 +40,6 @@ jobs:
             libavformat-dev \
             libavcodec-dev \
             zlib1g-dev \
-            openjdk-17-jdk \
             unzip \
             zip \
             autoconf \
@@ -42,20 +47,10 @@ jobs:
             pkg-config \
             ccache
 
-    - name: Download and Setup NDK r25b
-      run: |
-        mkdir -p /home/runner/android-ndk
-        cd /home/runner/android-ndk
-        curl -O https://dl.google.com/android/repository/android-ndk-r25b-linux.zip
-        unzip -q android-ndk-r25b-linux.zip
-        rm -f android-ndk-r25b-linux.zip
-
     - name: Install Buildozer and Cython
       run: |
         pip install --upgrade pip
-        pip install cython==0.29.36
-        pip install git+https://github.com/kivy/buildozer.git@master
-        pip install git+https://github.com/kivy/python-for-android.git@release-2024.01.21
+        pip install cython==0.29.36 buildozer
 
     - name: Clean Cache
       run: |
@@ -63,7 +58,7 @@ jobs:
 
     - name: Build APK
       env:
-        ANDROIDNDK: /home/runner/android-ndk/android-ndk-r25b
+        JAVA_HOME: /usr/lib/jvm/temurin-17-jdk-amd64
       run: |
         buildozer -v android debug
 
