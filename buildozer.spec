@@ -7,6 +7,7 @@ source.include_exts = py,png,jpg,kv,atlas,json,wav,mp3
 version = 1.0
 requirements = python3,kivy==2.3.0,pyjnius,android
 python_version = 3.10
+p4a.branch = release-2024.01.21
 orientation = portrait
 fullscreen = 0
 android.archs = arm64-v8a
