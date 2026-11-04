@@ -47,6 +47,7 @@ jobs:
       run: |
         pip install --upgrade pip
         pip install cython==0.29.36 buildozer
+        pip install git+https://github.com/kivy/python-for-android.git@release-2024.01.21
 
     - name: Clean Build Cache
       run: |
